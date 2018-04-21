@@ -26,6 +26,7 @@ def args(*args, **kwargs):
         return func
     return _decorator
 
+
 class Shell(object):
 
     def __init__(self, module):
@@ -54,21 +55,13 @@ class Shell(object):
 
             option = base_parser.parse_args(argv)
 
-            func_args = self._fetch_args(option.action_func, option)
-
-            option.action_func(*func_args)
+            option.action_func(option)
 
 
         except Exception as e:
             print(e)
             base_parser.print_help()
 
-    def _fetch_args(self, func, options):
-        fn_args = []
-        for each_args, each_kwargs in getattr(func, 'arguments', []):
-            arg = each_args[0]
-            fn_args.append(getattr(options, arg))
-        return fn_args
 
     def _mothods_of_obj(self, obj):
         methods = []
@@ -118,4 +111,4 @@ class Shell(object):
 if __name__ == '__main__':
     import tool1
     shell = Shell(tool1)
-    shell.run("printer my_print 1".split())
+    shell.run("printer my_print -q 1 1 2".split())

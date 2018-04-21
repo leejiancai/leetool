@@ -6,8 +6,9 @@ class Printer:
     def my_print(self):
         print(self.msg)
 
+@args('-q', '--query', metavar='<QUERY>')
 @args('a',  default=100, help='a help')
 @args('b',  default=200, help='b help')
-def my_print(a, b):
-    p = Printer("lijiancai a={}, b={}".format(a, b))
+def my_print(args):
+    p = Printer("lijiancai a={}, b={}".format(args.a, args.b))
     p.my_print()
