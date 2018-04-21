@@ -17,6 +17,15 @@ import sys
 import os
 
 
+# Decorator for cli-args
+def args(*args, **kwargs):
+    def _decorator(func):
+        # Because of the sematics of decorator composition if we just append
+        # to the options list positional options will appear to be backwards.
+        func.__dict__.setdefault('arguments', []).insert(0, (args, kwargs))
+        return func
+    return _decorator
+
 class Shell(object):
 
     def __init__(self, module):
@@ -39,13 +48,27 @@ class Shell(object):
                 sub_parser = sub_parsers.add_parser(action)
                 sub_parser.set_defaults(action_func=action_func)
 
-            option, unparsed = base_parser.parse_known_args(argv)
+                # 添加参数
+                for each_args, each_kwargs in getattr(action_func, 'arguments', []):
+                    sub_parser.add_argument(*each_args, **each_kwargs)
 
-            option.action_func()
-        except Exception:
+            option = base_parser.parse_args(argv)
+
+            func_args = self._fetch_args(option.action_func, option)
+
+            option.action_func(*func_args)
+
+
+        except Exception as e:
+            print(e)
             base_parser.print_help()
 
-
+    def _fetch_args(self, func, options):
+        fn_args = []
+        for each_args, each_kwargs in getattr(func, 'arguments', []):
+            arg = each_args[0]
+            fn_args.append(getattr(options, arg))
+        return fn_args
 
     def _mothods_of_obj(self, obj):
         methods = []
@@ -60,7 +83,6 @@ class Shell(object):
         import_path = self.module.__name__ + '.' + submodule
         __import__(import_path)
         return sys.modules[import_path]
-
 
     def _find_actions(self, sub):
         pass
@@ -91,3 +113,9 @@ class Shell(object):
             self.submodule_parsers[submodule] = sub_parser
 
         return base_parser
+
+
+if __name__ == '__main__':
+    import tool1
+    shell = Shell(tool1)
+    shell.run("printer my_print 1".split())
